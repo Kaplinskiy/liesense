@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FindTheLieQuestionSeed",
+  "type": "object",
+  "properties": {
+    "topic": { "type": "string" },
+    "question_set": { "type": "string" },
+    "question_set_title": { "type": "string" },
+    "question_set_type": { "type": "string", "enum": ["regular", "daily", "duel", "code"] },
+    "topic_name": { "type": "string" },
+    "prompt": { "type": "string" },
+    "stmt_a": { "type": "string" },
+    "stmt_b": { "type": "string" },
+    "stmt_c": { "type": "string" },
+    "lie_option": { "enum": ["A", "B", "C"] },
+    "explanation": { "type": "string" },
+    "correct_fact": { "type": "string" },
+    "trap_type": { "type": "string" },
+    "difficulty": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "source_url": { "type": ["string", "null"], "format": "uri" }
+  },
+  "required": [
+    "topic",
+    "question_set",
+    "prompt",
+    "stmt_a",
+    "stmt_b",
+    "stmt_c",
+    "lie_option",
+    "explanation",
+    "correct_fact",
+    "trap_type"
+  ]
+}
