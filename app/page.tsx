@@ -8,11 +8,11 @@ export default function HomePage() {
         <p className="text-sm uppercase tracking-widest text-muted-foreground">LieSense</p>
         <h1 className="text-3xl font-semibold text-ink sm:text-4xl">Три утверждения. Найди ложь за секунды.</h1>
         <p className="text-lg text-ink-light">
-          250 фактов про культуру, науку и технологии. В каждом раунде две правды и одна ложь — угадай её быстрее друзей.
+          Выбери одну из 10 тем, затем предмет — и проходи сессию из семи вопросов с мгновенным разбором.
         </p>
         <div className="cta-group">
           <Button asChild size="lg" className="min-w-[160px]">
-            <Link href="/play">Играть</Link>
+            <Link href="/start">Выбрать тему</Link>
           </Button>
           <Button asChild size="lg" variant="secondary" className="min-w-[160px]">
             <Link href="/daily">Сегодняшний челлендж</Link>

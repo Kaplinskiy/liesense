@@ -9,12 +9,23 @@ import type { SessionPayload } from "@/lib/types/api";
 
 type QuestionRow = Database["public"]["Tables"]["question"]["Row"];
 
+type SelectParams = {
+  mode: "regular" | "daily" | "duel";
+  duelToken?: string;
+  date?: string;
+  topicSlug?: string;
+  questionSetTitle?: string;
+};
+
 export async function POST(request: Request) {
   const body = await request.json();
   const mode: "regular" | "daily" | "duel" = body.mode ?? "regular";
   const duelToken: string | undefined = body.duelToken;
   const date: string | undefined = body.date;
   const numQuestions = clampQuestions(body.numQuestions);
+  const topicSlug: string | undefined = body.topicSlug;
+  const questionSetTitle: string | undefined = body.questionSetTitle;
+  const subjectSlug: string | undefined = body.subjectSlug;
 
   const supabase = getSupabaseServerClient();
   const guestId = getOrCreateGuestId(request.headers.get("x-guest-id") ?? undefined);
@@ -24,17 +35,22 @@ export async function POST(request: Request) {
   const selection = await selectQuestionSet(supabase, {
     mode,
     duelToken,
-    date
+    date,
+    topicSlug,
+    questionSetTitle
   });
 
   if (!selection) {
     return NextResponse.json({ error: "No question set available" }, { status: 404 });
   }
 
-  const questions = await fetchQuestions(supabase, selection.questionSetId, numQuestions);
+  const questions = await fetchQuestions(supabase, selection.questionSetId);
   if (!questions.length) {
     return NextResponse.json({ error: "Question set has no content" }, { status: 409 });
   }
+
+  const preparedQuestions =
+    mode === "duel" ? questions.slice(0, numQuestions) : selectRandomQuestions(questions, numQuestions);
 
   const newSession: Database["public"]["Tables"]["session"]["Insert"] = {
     user_id: userProfile.id,
@@ -66,14 +82,16 @@ export async function POST(request: Request) {
     sessionId: sessionRow.id,
     questionSetId: selection.questionSetId,
     score: sessionRow.score ?? 0,
-    questions: questions.map(mapQuestion)
+    questions: preparedQuestions.slice(0, numQuestions).map(mapQuestion)
   };
 
   captureEvent("session_start", {
     guest_id: guestId,
     mode,
     question_set_id: selection.questionSetId,
-    duel_id: selection.duelId ?? undefined
+    duel_id: selection.duelId ?? undefined,
+    subject_slug: subjectSlug,
+    topic_slug: topicSlug
   });
 
   return NextResponse.json(payload);
@@ -84,10 +102,23 @@ function clampQuestions(value?: number) {
   return Math.min(7, Math.max(5, requested || 7));
 }
 
-async function selectQuestionSet(
-  client: SupabaseServer,
-  params: { mode: "regular" | "daily" | "duel"; duelToken?: string; date?: string }
-) {
+async function selectQuestionSet(client: SupabaseServer, params: SelectParams) {
+  if (params.questionSetTitle) {
+    const columns = params.topicSlug ? "id, topic!inner(slug)" : "id";
+    const query = client.from("question_set").select(columns).eq("title", params.questionSetTitle);
+    if (params.topicSlug) {
+      query.eq("topic.slug", params.topicSlug);
+    }
+    const match = await query.maybeSingle();
+    if (match.error) {
+      if (match.status === 406) return null;
+      throw match.error;
+    }
+    if (!match.data) return null;
+    const row = (match.data as unknown) as { id: string };
+    return { questionSetId: row.id };
+  }
+
   if (params.mode === "daily") {
     const targetDate = params.date ? new Date(params.date) : new Date();
     const isoDate = targetDate.toISOString().slice(0, 10);
@@ -159,15 +190,24 @@ async function selectQuestionSet(
   return { questionSetId: chosen.id };
 }
 
-async function fetchQuestions(client: SupabaseServer, questionSetId: string, limit: number) {
+async function fetchQuestions(client: SupabaseServer, questionSetId: string) {
   const { data, error } = await client
     .from("question")
     .select("id, prompt, stmt_a, stmt_b, stmt_c")
     .eq("question_set_id", questionSetId)
-    .order("created_at")
-    .limit(limit);
+    .order("created_at");
   if (error) throw error;
   return data as QuestionRow[];
+}
+
+function selectRandomQuestions(rows: QuestionRow[], limit: number) {
+  if (rows.length <= limit) return [...rows];
+  const pool = [...rows];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, limit);
 }
 
 function mapQuestion(question: QuestionRow) {

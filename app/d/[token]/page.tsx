@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getDuelByToken } from "@/lib/game/duel";
 import { DuelAccept } from "@/components/session/duel-accept";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/components/ui/card";
+import { HomeButton } from "@/components/home-button";
 
 interface Props {
   params: { token: string };
@@ -21,6 +22,7 @@ export default async function DuelLandingPage({ params }: Props) {
 
   return (
     <main className="space-y-6">
+      <HomeButton />
       <header className="space-y-2">
         <p className="text-sm uppercase tracking-widest text-muted-foreground">LieSense Duel</p>
         <h1 className="text-3xl font-semibold text-ink">Тебе бросили вызов</h1>

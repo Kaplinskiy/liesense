@@ -40,11 +40,11 @@
   }
 
   main {
-    @apply min-h-screen mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8;
+    @apply mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-5 sm:max-w-3xl sm:px-6 sm:py-6;
   }
 
   .home section {
-    @apply rounded-3xl bg-white p-8 text-center shadow-xl;
+    @apply rounded-3xl bg-white p-6 text-center shadow-xl sm:p-8;
   }
 
   .home {
@@ -61,7 +61,7 @@
   }
 
   section {
-    @apply rounded-2xl bg-white p-6 shadow-lg;
+    @apply rounded-2xl bg-white p-4 shadow-lg sm:p-6;
   }
 
   .options {

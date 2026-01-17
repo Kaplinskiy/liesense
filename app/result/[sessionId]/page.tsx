@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { ResultShare } from "@/components/result-share";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/components/ui/card";
+import { HomeButton } from "@/components/home-button";
 
 interface Props {
   params: { sessionId: string };
@@ -45,6 +46,7 @@ export default async function SessionResultPage({ params }: Props) {
 
   return (
     <main className="space-y-6">
+      <HomeButton />
       <header className="space-y-2">
         <p className="text-sm uppercase tracking-widest text-muted-foreground">LieSense Result</p>
         <h1 className="text-3xl font-semibold text-ink">Счёт сессии {sessionData.mode}</h1>

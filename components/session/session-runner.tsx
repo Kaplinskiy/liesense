@@ -13,10 +13,11 @@ type AnswerState = AnswerPayload & { chosen: "A" | "B" | "C" };
 
 interface Props {
   initialSession: SessionPayload;
+  subjectSlug?: string;
   onComplete?: (payload: CompletePayload) => void;
 }
 
-export function SessionRunner({ initialSession, onComplete }: Props) {
+export function SessionRunner({ initialSession, onComplete, subjectSlug }: Props) {
   const session = initialSession;
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
@@ -30,6 +31,7 @@ export function SessionRunner({ initialSession, onComplete }: Props) {
   const totalQuestions = session.questions.length;
   const correctCount = Object.values(answers).filter((ans) => ans.isCorrect).length;
   const progressValue = ((questionIndex + (answered ? 1 : 0)) / totalQuestions) * 100;
+  const replayHref = subjectSlug ? `/play?subject=${subjectSlug}` : "/start";
 
   useEffect(() => {
     setQuestionStartedAt(Date.now());
@@ -37,25 +39,25 @@ export function SessionRunner({ initialSession, onComplete }: Props) {
 
   if (!question) {
     return (
-      <section className="space-y-4">
+      <div className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Нет вопросов</CardTitle>
           </CardHeader>
           <CardContent className="text-ink-light">{error ?? "Подождите и попробуйте снова."}</CardContent>
         </Card>
-      </section>
+      </div>
     );
   }
 
   if (complete) {
     return (
-      <section className="space-y-5">
+      <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Score {complete.score}/{totalQuestions}</CardTitle>
+            <CardTitle className="text-xl">Score {complete.score}/{totalQuestions}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 text-ink">
+          <CardContent className="space-y-3 text-ink">
             <p>Ты нашёл {complete.numCorrect} ложных утверждений.</p>
             {complete.streak && (
               <p>
@@ -80,14 +82,14 @@ export function SessionRunner({ initialSession, onComplete }: Props) {
             )}
           </CardContent>
         </Card>
-        <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link href="/play">Сыграть ещё</Link>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button asChild className="w-full sm:w-auto">
+            <Link href={replayHref}>Сыграть ещё</Link>
           </Button>
-          <Button variant="secondary" onClick={() => handleShare("result")}>
+          <Button variant="secondary" className="w-full sm:w-auto" onClick={() => handleShare("result")}>
             Поделиться результатом
           </Button>
-          <Button variant="outline" onClick={handleCreateDuel} disabled={!!duelLink}>
+          <Button variant="outline" className="w-full sm:w-auto" onClick={handleCreateDuel} disabled={!!duelLink}>
             {duelLink ? "Ссылка готова" : "Вызвать друга"}
           </Button>
         </div>
@@ -111,12 +113,12 @@ export function SessionRunner({ initialSession, onComplete }: Props) {
           </Card>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
-      </section>
+      </div>
     );
   }
 
   return (
-    <section className="space-y-4">
+    <div className="space-y-4">
       <div className="rounded-2xl border border-sand-accent bg-white/70 p-4 shadow-sm">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
@@ -127,11 +129,11 @@ export function SessionRunner({ initialSession, onComplete }: Props) {
         <Progress value={progressValue} className="mt-3 h-2" />
       </div>
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">Найди ложь</p>
-          <CardTitle className="text-2xl text-ink">{question.prompt}</CardTitle>
+          <CardTitle className="text-xl text-ink">{question.prompt}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 p-4 pt-0">
           {question.options.map((option, idx) => {
             const isSelected = answered?.chosen === option.label;
             const isLie = answered?.lieOption === option.label;
@@ -143,7 +145,7 @@ export function SessionRunner({ initialSession, onComplete }: Props) {
                 disabled={!!answered || submitting}
                 onClick={() => submitAnswer(option.label)}
                 className={cn(
-                  "w-full rounded-2xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "w-full rounded-2xl border px-3 py-3 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   "flex items-start gap-3",
                   answered
                     ? isLie
@@ -161,27 +163,27 @@ export function SessionRunner({ initialSession, onComplete }: Props) {
               </button>
             );
           })}
+          {answered && (
+            <div className="space-y-2 rounded-2xl border border-sand-accent bg-sand/60 p-3 text-sm">
+              <p className="text-base font-semibold text-ink">{answered.isCorrect ? "Верно!" : "Это правда"}</p>
+              <p className="text-ink">{answered.explanation}</p>
+              <p className="font-semibold text-ink">
+                Правильный факт: <span className="font-normal">{answered.correctFact}</span>
+              </p>
+              {typeof answered.stats?.wrongRate === "number" && (
+                <p className="text-xs text-muted-foreground">
+                  Ошиблись {Math.round(answered.stats.wrongRate * 100)}% игроков
+                </p>
+              )}
+              <Button type="button" className="w-full" onClick={handleNext}>
+                {questionIndex + 1 === totalQuestions ? "Завершить сессию" : "Следующий вопрос"}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
-      {answered && (
-        <div className="space-y-3 rounded-2xl border border-sand-accent bg-sand/60 p-4 shadow-sm">
-          <p className="text-base font-semibold text-ink">{answered.isCorrect ? "Верно!" : "Это правда"}</p>
-          <p className="text-ink">{answered.explanation}</p>
-          <p className="font-semibold text-ink">
-            Правильный факт: <span className="font-normal">{answered.correctFact}</span>
-          </p>
-          {typeof answered.stats?.wrongRate === "number" && (
-            <p className="text-sm text-muted-foreground">
-              Ошиблись {Math.round(answered.stats.wrongRate * 100)}% игроков
-            </p>
-          )}
-          <Button type="button" onClick={handleNext}>
-            {questionIndex + 1 === totalQuestions ? "Завершить сессию" : "Следующий вопрос"}
-          </Button>
-        </div>
-      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
-    </section>
+    </div>
   );
 
   async function submitAnswer(option: "A" | "B" | "C") {

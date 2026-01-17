@@ -1,12 +1,14 @@
 import { Suspense } from "react";
 import { getSession } from "@/lib/game/session";
 import { SessionRunner } from "@/components/session/session-runner";
+import { HomeButton } from "@/components/home-button";
 
 export default async function DailyChallengePage() {
   const session = await getSession({ mode: "daily" });
 
   return (
     <main className="space-y-6">
+      <HomeButton />
       <header className="space-y-2">
         <p className="text-sm uppercase tracking-widest text-muted-foreground">LieSense Daily</p>
         <h1 className="text-3xl font-semibold text-ink">Челлендж дня</h1>
