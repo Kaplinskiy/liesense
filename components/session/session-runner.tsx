@@ -31,7 +31,9 @@ export function SessionRunner({ initialSession, onComplete, subjectSlug }: Props
   const totalQuestions = session.questions.length;
   const correctCount = Object.values(answers).filter((ans) => ans.isCorrect).length;
   const progressValue = ((questionIndex + (answered ? 1 : 0)) / totalQuestions) * 100;
-  const replayHref = subjectSlug ? `/play?subject=${subjectSlug}` : "/start";
+  const replayHref = subjectSlug
+    ? ({ pathname: "/play", query: { subject: subjectSlug } } as const)
+    : ("/start" as const);
 
   useEffect(() => {
     setQuestionStartedAt(Date.now());
