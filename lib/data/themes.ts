@@ -27,6 +27,13 @@ export const THEMES: ThemeOption[] = [
         questionSetTitle: "Химия 7-8 класс · сет 1"
       },
       {
+        id: "chemistry-11",
+        name: "Химия 11 класс",
+        description: "Органика, физхимия и tricky реакции выпускного курса.",
+        topicSlug: "science",
+        questionSetTitle: "Химия 11 класс · сет 1"
+      },
+      {
         id: "literature",
         name: "Литература",
         description: "Классики, театры и медиа.",
