@@ -1,0 +1,10 @@
+node_modules
+.next/
+.env
+.env.*
+.DS_Store
+app/.DS_Store
+components/.DS_Store
+lib/.DS_Store
+supabase/.DS_Store
+supabase/.temp/
